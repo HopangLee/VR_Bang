@@ -14,6 +14,19 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable
     public InputField ifSendMsg; // 필요 x
     public Text playerCount;
 
+    public GameObject currentTurn;// 현재 차례의 플레이어
+    public List<GameObject> playerList; // 현재 플레이어 모음 리스트 (살아있는 플레이어)
+
+    public enum Phase {Phase0, Phase1, Phase2, Phase3};
+    /* 
+     * phase 0: 드로우 전에 사용되는 효과 (ex. 다이너마이트)
+     * phase 1: 덱에서 카드 2장 가져옴 (캐릭터에 카드관련 특수능력 있을 시 사용)
+     * phase 2: 패의 카드 사용
+     * phase 3: 현재 라이프와 패의 카드 수가 같도록 함
+     */
+
+    public Phase currentPhase;
+
     // 외부에서 싱글톤 오브젝트를 가져올 때 사용할 프로퍼티
     public static GameManager instance
     {
@@ -62,23 +75,6 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable
 
         Vector3 pos;
 
-        /*
-        while(true){
-            x = radius * Mathf.Cos(r * Mathf.PI * 1 / 3);
-            z = radius * Mathf.Sin(r * Mathf.PI * 1 / 3);
-
-            pos = new Vector3(x, 0.5f, z);
-
-            Collider[] hitColliders = Physics.OverlapSphere(pos, 2, 1 << 8);
-
-            if(hitColliders.Length == 0 || r == 6){
-                Debug.Log("r: " + r);
-                break;
-            }
-            r++;
-        }
-        */
-
         r = PhotonNetwork.PlayerList.Length;
 
         x = radius * Mathf.Cos(r * Mathf.PI * 1 / 3);
@@ -88,7 +84,19 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable
 
         // 네트워크 상의 모든 클라이언트들에서 생성 실행
         // 단, 해당 게임 오브젝트의 주도권은, 생성 메서드를 직접 실행한 클라이언트에게 있음
-        PhotonNetwork.Instantiate(playerPrefab.name, pos, Quaternion.identity);
+        GameObject o = PhotonNetwork.Instantiate(playerPrefab.name, pos, Quaternion.identity);
+
+        photonView.RPC("Addplayer", RpcTarget.All, o);
+    }
+
+    [PunRPC]
+    void AddPlayer(GameObject o) // 리스트에 플레이어 추가하기
+    {
+        if (!playerList.Contains(o))
+        {
+            playerList.Add(o);
+        }
+        
     }
 
     void Update()
@@ -102,12 +110,17 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable
         // 로컬 오브젝트라면 쓰기 부분이 실행됨
         if (stream.IsWriting)
         {
-
+            stream.SendNext(playerList);
         }
         else
         {
             // 리모트 오브젝트라면 읽기 부분이 실행됨
+            List<GameObject> o = (List<GameObject>)stream.ReceiveNext();
 
+            if(playerList.Count < o.Count)
+            {
+                playerList = o;
+            }
         }
     }
 
@@ -174,4 +187,60 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable
         playerCount.text = string.Format("[{0}/{1}]", currPlayer, maxPlayer);
     }
     
+    [PunRPC]
+    public void GameStart()
+    {
+        currentTurn = playerList[0]; // 현재 순서 = 첫번째 플레이어
+        currentPhase = Phase.Phase1; // 현재 페이즈 = 페이즈1 (드로우)
+
+        // 게임 시작후 실행될 함수
+    }
+
+    [PunRPC]
+    public void startPhase0()
+    {
+
+    }
+
+    [PunRPC]
+    public void endPhase0()
+    {
+
+    }
+
+    [PunRPC]
+    public void startPhase1()
+    {
+
+    }
+
+    [PunRPC]
+    public void endPhase1()
+    {
+
+    }
+
+    [PunRPC]
+    public void startPhase2()
+    {
+
+    }
+
+    [PunRPC]
+    public void endPhase2()
+    {
+
+    }
+
+    [PunRPC]
+    public void startPhase3()
+    {
+
+    }
+
+    [PunRPC]
+    public void endPhase3()
+    {
+
+    }
 }

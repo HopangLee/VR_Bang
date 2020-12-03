@@ -40,6 +40,16 @@ MonoBehaviour:
   - RespawnSpaceship
   - ReceiveMsg
   - ChangePlayerCount
+  - AddPlayer
+  - endPhase0
+  - endPhase1
+  - endPhase2
+  - endPhase3
+  - GameStart
+  - startPhase0
+  - startPhase1
+  - startPhase2
+  - startPhase3
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
